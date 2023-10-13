@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="style.css">
+    <title>Music Player</title>
+    <style>
+	body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 160vh;
+    position: relative; 
+}
+ h1 {
+    color: #fff;
+    font-size: 30px;
+    position: absolute; 
+    top: 10px;
+}
+
+.music-player {
+    background-color: hsl(0, 0%, 100%);
+    border-radius: 10px;
+    padding: 10px; 
+    width: 250px;
+    height: 40px;
+}
+
+
+
+.player-controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+button {
+    background-color: #272525;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px ;
+    cursor: pointer;
+    font-size: 16px;
+
+}
+
+button:hover {
+    background-color: #312420;
+}
+
+button:focus {
+    outline: none;
+}
+
+input[type="hidden"] {
+    display: none;
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.video-background video {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}
+
+.content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 50px;
+    color: #fff;
+    font-size: 24px;
+}
+
+.background-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* background-image: url('image1.jpg'); */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
+ #current-song-name {
+    font-family: 'Pacifico', monospace;
+    color: #fff;
+    font-size: 20px;
+    width: 100%;
+    text-align: center;
+    position: static; 
+    bottom: 10px;
+    padding: 10px;
+
+}
+	</style>
+</head>
+<body>
+    
+    <!-- <h1>Musics</h1> -->
+    <div id="current-song-name">Song Name</div> 
+    <div class="background-image"></div>
+    <div class="music-player">
+        <div class="player-controls">
+            <button id="prev-btn">Previous</button>
+            <button id="play-pause-btn">Play</button>
+            <button id="next-btn">Next</button>
+            
+            <input type="hidden" id="volume-control" min="0" max="1" step="0.01" value="0.5">
+        </div>
+        <div class="video-background">
+            <video autoplay muted loop>
+                <source src="your-video1.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+    </div>
+    <br>
+    <audio id="audio-player" controls></audio>
+      <!-- <div id="current-song-name">Song Name</div>  -->
+    <script>
+	
+const audio = document.getElementById('audio-player');
+const video = document.querySelector('.video-background video');
+const playPauseBtn = document.getElementById('play-pause-btn');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const volumeControl = document.getElementById('volume-control');
+const playlist = document.querySelector('.playlist');
+const currentSongName = document.getElementById('current-song-name');
+
+const songs = [
+    'songs/ChaandTaare.mp3',
+    'songs/Chaleya.mp3',
+    'songs/MainYahaanHoon.mp3',
+    'songs/Mitwa.mp3',
+    'songs/TujheDekhaTo.mp3',
+    'songs/ZaraSaJhoomLoonMain.mp3',
+    'songs/Aaj Ki Raat.mp3',
+    'songs/I Am the Best.mp3',
+    'songs/Main Hoon Na.mp3',
+    'songs/Noor E Khuda.mp3',
+];
+const videoBackgrounds = {
+//     'songs/ChaandTaare.mp3': 'videos/video1.mp4',
+//     'songs/Chaleya.mp3': 'videos/video2.mp4',
+    'songs/MainYahaanHoon.mp3': 'videos/video1.mp4',
+    'songs/Mitwa.mp3': 'videos/video4.mp4',
+//     'songs/TujheDekhaTo.mp3': 'videos/video1.mp4',
+    // 'songs/ZaraSaJhoomLoonMain.mp3': 'videos/video2.mp4',
+    // 'songs/Aaj Ki Raat.mp3' : '',
+    // 'songs/I Am the Best.mp3' : '',
+    'songs/Main Hoon Na.mp3' : 'videos/video3.mp4',
+    'songs/Noor E Khuda.mp3' : 'videos/video2.mp4',
+};
+
+const imageBackgrounds = {
+    'songs/ChaandTaare.mp3': 'images/image10.jpg',
+    'songs/Chaleya.mp3': 'images/image23.jpg',
+    // 'songs/MainYahaanHoon.mp3': 'images/image12.jpg',
+    // 'songs/Mitwa.mp3': 'images/image28.jpg',
+    'songs/TujheDekhaTo.mp3': 'images/image30.jpg',
+    'songs/ZaraSaJhoomLoonMain.mp3': 'images/image26.jpg',
+    'songs/Aaj Ki Raat.mp3' : 'images/image10.jpg',
+    'songs/I Am the Best.mp3' : 'images/image12.jpg',
+    // 'songs/Main Hoon Na.mp3' : '',
+    // 'songs/Noor E Khuda.mp3' : '',
+};
+let currentSongIndex = 0;
+
+
+
+
+function loadSong(index) {
+    const songName = songs[index].replace("songs/", "").replace(".mp3", "");
+    audio.src = songs[index];
+    currentSongName.textContent = songName; 
+    document.querySelector('.background-image').style.backgroundImage = 
+    `url(${imageBackgrounds[songs[index]]})`;
+    audio.load();
+    video.src = videoBackgrounds[songs[index]];
+}
+
+
+// function loadSong(index) {
+//     audio.src = songs[index];
+//     // video.src = videoBackgrounds[songs[index]];
+//     audio.load();
+// }
+
+function playSong() {
+    audio.play();
+    playPauseBtn.textContent = 'Pause';
+}
+
+function pauseSong() {
+    audio.pause();
+    playPauseBtn.textContent = 'Play';
+}
+
+function playPause() {
+    if (audio.paused) {
+        playSong();
+    } else {
+        pauseSong();
+    }
+}
+
+
+function nextSong() {
+    currentSongIndex = (currentSongIndex + 1) % songs.length;
+    loadSong(currentSongIndex);
+    playSong();
+}
+
+function prevSong() {
+    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+    loadSong(currentSongIndex);
+    playSong();
+}
+
+playPauseBtn.addEventListener('click', playPause);
+nextBtn.addEventListener('click', nextSong);
+prevBtn.addEventListener('click', prevSong);
+volumeControl.addEventListener('input', (e) => {
+    audio.volume = e.target.value;
+});
+
+loadSong(currentSongIndex);
+	</script>
+</body>
+</html>
